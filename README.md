@@ -6,8 +6,6 @@ Expense Tracker is a Python command-line application that helps users record and
 
 ## Features
 
-* ## Features
-
 * Add expenses
 * Update expense records
 * Delete expenses
