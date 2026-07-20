@@ -1,0 +1,250 @@
+import argparse
+import json
+import os
+import csv
+from datetime import datetime
+
+EXPENSE_FILE = "expenses.json"
+BUDGET_FILE = "budget.json"
+
+
+# -----------------------------
+# Load / Save Helpers
+# -----------------------------
+def load_expenses():
+    if not os.path.exists(EXPENSE_FILE):
+        return []
+    with open(EXPENSE_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_expenses(expenses):
+    with open(EXPENSE_FILE, "w") as f:
+        json.dump(expenses, f, indent=4)
+
+
+def load_budget():
+    if not os.path.exists(BUDGET_FILE):
+        return {}
+    with open(BUDGET_FILE, "r") as f:
+        return json.load(f)
+
+
+def save_budget(data):
+    with open(BUDGET_FILE, "w") as f:
+        json.dump(data, f, indent=4)
+
+
+# -----------------------------
+# Add Expense
+# -----------------------------
+def add_expense(description, amount, category):
+    expenses = load_expenses()
+
+    expense = {
+        "id": len(expenses) + 1,
+        "date": datetime.today().strftime("%Y-%m-%d"),
+        "description": description,
+        "amount": amount,
+        "category": category
+    }
+
+    expenses.append(expense)
+    save_expenses(expenses)
+
+    print(f"Expense added successfully (ID: {expense['id']})")
+    check_budget()
+
+
+# -----------------------------
+# Update Expense
+# -----------------------------
+def update_expense(expense_id, description, amount, category):
+    expenses = load_expenses()
+
+    for exp in expenses:
+        if exp["id"] == expense_id:
+            if description:
+                exp["description"] = description
+            if amount is not None:
+                exp["amount"] = amount
+            if category:
+                exp["category"] = category
+
+            save_expenses(expenses)
+            print("Expense updated successfully.")
+            return
+
+    print("Expense ID not found.")
+
+
+# -----------------------------
+# Delete Expense
+# -----------------------------
+def delete_expense(expense_id):
+    expenses = load_expenses()
+    new_expenses = [e for e in expenses if e["id"] != expense_id]
+
+    if len(new_expenses) == len(expenses):
+        print("Expense ID not found.")
+        return
+
+    save_expenses(new_expenses)
+    print("Expense deleted successfully.")
+
+
+# -----------------------------
+# List Expenses
+# -----------------------------
+def list_expenses(category=None):
+    expenses = load_expenses()
+
+    if category:
+        expenses = [e for e in expenses if e["category"].lower() == category.lower()]
+
+    if not expenses:
+        print("No expenses found.")
+        return
+
+    print(f"{'ID':<5}{'Date':<15}{'Description':<20}{'Category':<15}{'Amount'}")
+    print("-" * 65)
+
+    for exp in expenses:
+        print(f"{exp['id']:<5}{exp['date']:<15}{exp['description']:<20}{exp['category']:<15}${exp['amount']}")
+
+
+# -----------------------------
+# Summary
+# -----------------------------
+def summary(month=None):
+    expenses = load_expenses()
+
+    if month:
+        total = sum(
+            e["amount"] for e in expenses
+            if datetime.strptime(e["date"], "%Y-%m-%d").month == month
+        )
+
+        month_name = datetime(2026, month, 1).strftime("%B")
+        print(f"Total expenses for {month_name}: ${total}")
+    else:
+        total = sum(e["amount"] for e in expenses)
+        print(f"Total expenses: ${total}")
+
+
+# -----------------------------
+# Budget
+# -----------------------------
+def set_budget(amount):
+    data = {"budget": amount}
+    save_budget(data)
+    print(f"Monthly budget set to ${amount}")
+
+
+def check_budget():
+    budget_data = load_budget()
+    if "budget" not in budget_data:
+        return
+
+    budget = budget_data["budget"]
+    current_month = datetime.today().month
+
+    expenses = load_expenses()
+    spent = sum(
+        e["amount"] for e in expenses
+        if datetime.strptime(e["date"], "%Y-%m-%d").month == current_month
+    )
+
+    if spent > budget:
+        print("⚠ WARNING: Budget exceeded!")
+        print(f"Budget: ${budget}")
+        print(f"Spent:  ${spent}")
+        print(f"Exceeded by: ${spent - budget}")
+
+
+# -----------------------------
+# Export CSV
+# -----------------------------
+def export_csv(filename="export.csv"):
+    expenses = load_expenses()
+
+    with open(filename, "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["ID", "Date", "Description", "Category", "Amount"])
+
+        for e in expenses:
+            writer.writerow([
+                e["id"], e["date"], e["description"],
+                e["category"], e["amount"]
+            ])
+
+    print(f"Expenses exported successfully to {filename}")
+
+
+# -----------------------------
+# CLI Setup
+# -----------------------------
+parser = argparse.ArgumentParser(prog="expense-tracker", description="CLI Expense Tracker")
+subparsers = parser.add_subparsers(dest="command")
+
+# Add
+add_parser = subparsers.add_parser("add")
+add_parser.add_argument("--description", required=True)
+add_parser.add_argument("--amount", required=True, type=float)
+add_parser.add_argument("--category", default="General")
+
+# Update
+update_parser = subparsers.add_parser("update")
+update_parser.add_argument("--id", required=True, type=int)
+update_parser.add_argument("--description")
+update_parser.add_argument("--amount", type=float)
+update_parser.add_argument("--category")
+
+# Delete
+delete_parser = subparsers.add_parser("delete")
+delete_parser.add_argument("--id", required=True, type=int)
+
+# List
+list_parser = subparsers.add_parser("list")
+list_parser.add_argument("--category")
+
+# Summary
+summary_parser = subparsers.add_parser("summary")
+summary_parser.add_argument("--month", type=int)
+
+# Budget
+budget_parser = subparsers.add_parser("budget")
+budget_parser.add_argument("--amount", required=True, type=float)
+
+# Export
+subparsers.add_parser("export")
+
+args = parser.parse_args()
+
+
+# -----------------------------
+# Command Execution
+# -----------------------------
+if args.command == "add":
+    add_expense(args.description, args.amount, args.category)
+
+elif args.command == "update":
+    update_expense(args.id, args.description, args.amount, args.category)
+
+elif args.command == "delete":
+    delete_expense(args.id)
+
+elif args.command == "list":
+    list_expenses(args.category)
+
+elif args.command == "summary":
+    summary(args.month)
+
+elif args.command == "budget":
+    set_budget(args.amount)
+
+elif args.command == "export":
+    export_csv()
+
+else:
+    parser.print_help()
