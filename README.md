@@ -1,7 +1,9 @@
 # PennyPilot (Python CLI)
 
 ## Project URL
-https://github.com/Eshikapearl/PennyPilot
+
+https://roadmap.sh/projects/expense-tracker
+
 ## Description
 Expense Tracker is a Python command-line application that helps users record and manage their daily expenses. It allows users to add, update, delete, and view expenses, generate spending summaries, set monthly budgets, filter by category, and export records to CSV.
 
