@@ -23,6 +23,9 @@ Expense Tracker is a Python command-line application that helps users record and
 * Python 3.8 or later
 * No external libraries required (uses Python's built-in libraries)
 
+## Project URL
+*https://github.com/Eshikapearl/PennyPilot.git
+
 ## Installation
 
 1. Clone this repository:
