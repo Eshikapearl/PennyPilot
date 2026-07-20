@@ -6,16 +6,19 @@ Expense Tracker is a Python command-line application that helps users record and
 
 ## Features
 
-* Add new expenses with description, amount, category, and date
-* Update existing expense records
+* ## Features
+
+* Add expenses
+* Update expense records
 * Delete expenses
-* View all recorded expenses
-* Generate a summary of total expenses
-* View monthly expense summaries
-* Filter expenses by category
-* Set a monthly budget and receive overspending warnings
-* Export expense records to a CSV file
-* Store data permanently using JSON files
+* View all expenses
+* Generate total and monthly summaries
+* Categorize and filter expenses
+* Set monthly budgets
+* Receive budget alerts
+* Export data to CSV
+* Store data using JSON
+
 
 ## Requirements
 
